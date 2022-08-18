@@ -1,4 +1,5 @@
-// to do package 
+package;
+
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -8,14 +9,17 @@ import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 
-
+/**
+ * 新导航圆切换效果(Bezier曲线实现)
+ * @author sm2884 yuxiangliu
+ * @date 2022/08/09
+ */
 public class NavigationCircleContainer extends View {
 
     private ArrayList<CirclePoint> mCirclePointList; // 定点圆集合
@@ -26,17 +30,17 @@ public class NavigationCircleContainer extends View {
 
     private float fixedPX, fixedPY, animPX, animPY; // 滑动前固定圆与动态圆坐标的xy值
     private double mBetweenFixedAndDynamicCircleDistance; // 固定圆与动态圆之间距离
-    private int currentIndex; // 当前选中的圆
+    private int currentIndex = 0; // 当前选中的圆
 
     private int mSelectColor = Color.WHITE;
     private int mNormalColor = Color.GRAY;
-    private int mCirCleRadius = 10; // 默认圆半径
+    private int mCirCleRadius = 8; // 默认圆半径
     private Paint mPaint; // 绘画选择部分的画笔
     private Path mPath; // 动画路径
 
     private Context mContext;
     private int ScreenWidth;
-    private int mKeepFixedCircleStateOffset = 5; // 保持固定圆状态的偏移量
+    private int mKeepFixedCircleStateOffset = 0; // 保持固定圆状态的偏移量
     private int pointY = mCirCleRadius * 2; // 圆点坐标的Y轴值不变，为半径的2倍
 
     // 以下几个变量主要是为了使圆点居中显示在整个控件里，该方案可以使定长的该控件也实现居中显示
@@ -45,7 +49,7 @@ public class NavigationCircleContainer extends View {
     private int mCircleItemCenterLength; // 每个小Item中心点到Item两端的距离，即（mCircleItemWidth/2）
 
     // 转换切换页面进度时使用
-    private float scale;//屏幕宽度与当前View宽度的比例
+//    private float scale;//屏幕宽度与当前View宽度的比例
 
 
     public NavigationCircleContainer(Context context) {
@@ -132,7 +136,7 @@ public class NavigationCircleContainer extends View {
         // 计算Path路径
         calculationSelectPath();
         // 绘制Path路径
-        canvas.drawPath(mPath,mPaint);
+        canvas.drawPath(mPath, mPaint);
     }
 
     private void calculationSelectPath() {
@@ -203,7 +207,6 @@ public class NavigationCircleContainer extends View {
         mPath.lineTo(p4.X, p4.Y);
         mPath.quadTo(p5.X, p5.Y, p2.X, p2.Y);
         mPath.lineTo(p1.X, p1.Y);
-
     }
 
     //计算矩形Path（用于动态圆和定点圆未完全脱离时绘制）
@@ -215,9 +218,11 @@ public class NavigationCircleContainer extends View {
         mPath.close();
     }
 
-    public void setTranslateX(int x) {
+    public void setTranslateX(Float x,int mPosition) {
         if (mAnimCirclePoint != null && mAnimCirclePoint.getP() != null) {
-            mAnimCirclePoint.getP().X = x / scale + mCircleItemCenterLength + mCirCleRadius;
+            // 此处计算方式为itemWidth*数量+中心点距即让圆心处于Item的中点+偏移百分比*间距即ItemWidth
+            mAnimCirclePoint.getP().X = mCircleItemWidth * mPosition + (mCircleItemWidth * x) + mCircleItemCenterLength;
+//            mAnimCirclePoint.getP().X = x / scale + mCircleItemCenterLength;
         }
         invalidate();
     }
@@ -226,7 +231,7 @@ public class NavigationCircleContainer extends View {
     private void initData() {
         if (count > 0) {
             mCircleItemWidth = mContainerViewWidth / count;
-            scale = (float) ScreenWidth / (float) mCircleItemWidth;
+//            scale = (float) ScreenWidth / (float) mCircleItemWidth;
             mCircleItemCenterLength = mCircleItemWidth / 2;
             mCirclePointList.clear();
             // 初始化定圆具体数据
@@ -240,8 +245,8 @@ public class NavigationCircleContainer extends View {
                 circlePoint.setP(p);
                 mCirclePointList.add(circlePoint);
             }
-            // 初始化定点圆具体数据
-            mAnimP.X = mCircleItemCenterLength + mCirCleRadius;
+//            // 初始化动态圆具体数据
+            mAnimP.X = mCircleItemCenterLength + mCircleItemWidth * currentIndex;
             mAnimP.Y = pointY;
             mAnimP.radius = mCirCleRadius;
             mAnimCirclePoint.setP(mAnimP);
@@ -289,4 +294,13 @@ public class NavigationCircleContainer extends View {
     public void setKeepFixedCircleStateOffset(int mKeepFixedCircleStateOffset) {
         this.mKeepFixedCircleStateOffset = mKeepFixedCircleStateOffset;
     }
+
+    public int getCurrentIndex() {
+        return currentIndex;
+    }
+
+    public void setCurrentIndex(int currentIndex) {
+        this.currentIndex = currentIndex;
+    }
 }
+
